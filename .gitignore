@@ -11,7 +11,7 @@ models/*.joblib
 *.jpeg
 *.jpg
 *.png
-!report/figures/*.png
+!basic_phase1/figures/*.png
 
 # Project reports in LaTeX and project presentations stay local
 *.tex

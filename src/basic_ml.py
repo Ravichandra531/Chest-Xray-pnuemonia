@@ -1,8 +1,8 @@
 """Basic Phase 1 ML implemented explicitly; no ML/statistics framework.
 
 Supporting libraries: NumPy arrays, Pillow JPEG decoding, Matplotlib figures.
-Everything else uses Python's standard library. This implementation is separate
-from the earlier sklearn benchmark, with its own features and results directory.
+Everything else uses Python's standard library. The standalone notebook embeds
+this implementation; this module supports the saved-artifact verification script.
 """
 import csv
 import hashlib

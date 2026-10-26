@@ -1,4 +1,0 @@
-experiment,C,cv_balanced_accuracy,cv_std
-texture_intensity_scaled,0.1,0.9665431456789638,0.00416243199947302
-texture_intensity_unscaled,0.1,0.9568645684232941,0.007885491177703732
-intensity_only_scaled,0.1,0.8863982505311744,0.0031120329980309936
