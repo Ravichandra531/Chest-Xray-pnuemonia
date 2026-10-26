@@ -1,0 +1,8 @@
+{
+  "fold": 0,
+  "fit_rows": 3168,
+  "validation_rows": 1585,
+  "max_absolute_training_mean": 6.659398422925733e-06,
+  "validation_mean_absolute": 0.03362681344151497,
+  "constant_features": 0
+}

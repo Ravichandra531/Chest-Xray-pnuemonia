@@ -1,0 +1,13 @@
+{
+  "size": [
+    64,
+    64
+  ],
+  "features": 1799,
+  "hog": 1764,
+  "lbp": 10,
+  "intensity_histogram": 16,
+  "summary_statistics": 9,
+  "pixel_normalization": "divide by 255 (fixed)",
+  "learned_scaling": "StandardScaler fitted within CV pipeline; never on test"
+}

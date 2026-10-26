@@ -1,0 +1,57 @@
+{
+  "experiment": "basic_from_scratch_149_features",
+  "seed": 42,
+  "selected_model": {
+    "model": "logistic_regression",
+    "regularization": 0.01,
+    "cv_balanced_accuracy": 0.9537735167542962,
+    "cv_standard_deviation": 0.007736799309861048,
+    "training_balanced_accuracy": 0.9604582422834259
+  },
+  "test_threshold": 0.5,
+  "development_images": 4753,
+  "test_images": 618,
+  "test_metrics": {
+    "accuracy": 0.8349514563106796,
+    "balanced_accuracy": 0.7905634417262324,
+    "precision": 0.8077753779697624,
+    "recall": 0.9664082687338501,
+    "specificity": 0.6147186147186147,
+    "f1": 0.88,
+    "roc_auc": 0.924001924001924,
+    "tn": 142,
+    "fp": 89,
+    "fn": 13,
+    "tp": 374
+  },
+  "bootstrap_95_intervals": {
+    "balanced_accuracy": [
+      0.7571090857407269,
+      0.8239058552103429
+    ],
+    "recall": [
+      0.9466827411167512,
+      0.9825888568683958
+    ],
+    "specificity": [
+      0.5492254560085837,
+      0.6781601272534464
+    ],
+    "f1": [
+      0.8516381151000546,
+      0.9057880570765053
+    ],
+    "roc_auc": [
+      0.8989537338130736,
+      0.9436153384451933
+    ]
+  },
+  "libraries": {
+    "numpy": "2.4.2",
+    "Pillow": "12.2.0",
+    "matplotlib": "3.10.8"
+  },
+  "python": "3.12.6",
+  "grouping_caveat": "filename/hash groups, not verified patient IDs",
+  "execution_environment": "Local Python"
+}

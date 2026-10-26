@@ -1,0 +1,11 @@
+{
+  "seed": 42,
+  "image_size": [
+    64,
+    64
+  ],
+  "n_folds": 3,
+  "positive_class": "PNEUMONIA",
+  "selection_metric": "balanced_accuracy",
+  "feature_version": 1
+}
