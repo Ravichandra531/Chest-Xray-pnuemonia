@@ -33,3 +33,6 @@ models/*.joblib
 *.key
 [Pp]resentation*/
 [Pp]roject[Pp]resentation*/
+
+!phase2/Phase_2_Presentation.pptx
+!phase2/report/phase2_ieee.tex

@@ -6,6 +6,10 @@ An end-to-end Phase 1 classification project using interpretable image features 
 
 `Chest X-Rays Pneumonia.ipynb` is the only notebook in this repository. It contains the literature review, dataset audit, exploratory analysis, feature engineering, scaling, model training, validation, saved outputs and explanation guide. It is self-contained and does not require imports from this repository.
 
+## Phase 2
+
+The [Phase 2 transfer-learning and hybrid evaluation](phase2/reference/README.md) includes an attributed reference ResNet18 checkpoint, a reproduced test evaluation, and an ablation script. The reference experiment uses a different split from Phase 1. See its documentation before comparing results.
+
 ## Method
 
 - Decode and audit the NORMAL/PNEUMONIA chest radiographs, checking duplicates and filename-derived patient groups.
