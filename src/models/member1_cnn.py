@@ -8,7 +8,7 @@ Date: 2026-11-20
 Description:
     Implements a 5-block convolutional neural network from scratch using PyTorch.
     Includes batch normalization, dropout regularization, and adaptive pooling.
-    Achieves ≥85% CV balanced accuracy on pneumonia detection task.
+    Performance depends on training and evaluation; no score is guaranteed.
 
 Key Learning Points:
     1. Convolutional layers extract spatial features

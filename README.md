@@ -6,6 +6,10 @@ An end-to-end Phase 1 classification project using interpretable image features 
 
 `Chest X-Rays Pneumonia.ipynb` is the only notebook in this repository. It contains the literature review, dataset audit, exploratory analysis, feature engineering, scaling, model training, validation, saved outputs and explanation guide. It is self-contained and does not require imports from this repository.
 
+## Deep learning and feature fusion
+
+The [deep-learning and hybrid evaluation](phase2/reference/README.md) uses a supplied ResNet18 checkpoint to classify X-rays and compares handcrafted, CNN, and combined features. It uses a different split from the earlier experiment; see its documentation before comparing results.
+
 ## Method
 
 - Decode and audit the NORMAL/PNEUMONIA chest radiographs, checking duplicates and filename-derived patient groups.
