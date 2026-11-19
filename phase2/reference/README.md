@@ -1,16 +1,18 @@
-# Phase 2: transfer learning and feature fusion
+# Chest X-Ray Classification with ResNet18 and Feature Fusion
 
 This educational prototype classifies pediatric chest X-rays as NORMAL or PNEUMONIA. It is not a medical device and must not be used for patient decisions.
 
-## What was adapted
+## What is implemented
 
-The ResNet18 implementation, split manifest, training history, trained weights, and original metrics originate from [Silence91169/pneumonia-screening-ml-dl](https://github.com/Silence91169/pneumonia-screening-ml-dl), commit `814aabe7a49b319c564f959881c313ee3c8e203f`. The source repository does not declare a license; attribution is given here, but permission for redistribution or reuse should be confirmed with the author. This is a reference model, not a model trained by this team. Its checkpoint SHA-256 is `e8dd23956afb6773226c68d15836407dd1d5b4cd0d2ba3a76f634ab00d0d766b`.
+The project classifies chest X-rays as NORMAL or PNEUMONIA using a ResNet18 convolutional neural network. Images are converted to grayscale, resized to 224 × 224 pixels, repeated across three channels, and normalized before inference. A supplied pretrained checkpoint generates a pneumonia score and a 512-dimensional representation of each image. The checkpoint was evaluated locally; it was not trained in this local run.
 
-The added `hybrid_ablation.py` combines its 512-dimensional CNN embedding with 68 handcrafted descriptors (64 coarse intensity cells plus mean, standard deviation, and horizontal and vertical intensity differences). Class-balanced logistic regression compares handcrafted-only, CNN-only, and fused inputs. Standardization is fitted on training data only; C is selected from 0.01, 0.1, and 1.0 using validation balanced accuracy. The test set is evaluated at threshold 0.5. The reference model itself already used validation for checkpoint selection, so this is exploratory model development, not an independent validation study.
+The hybrid implementation in `hybrid_ablation.py` combines the CNN representation with 68 handcrafted descriptors: 64 regional intensity averages, global mean and standard deviation, and horizontal and vertical intensity differences. A class-balanced logistic regression classifier evaluates handcrafted features alone, CNN features alone, and the combined features. This comparison tests whether combining the two feature types changes performance.
+
+For each classifier, standardization is fitted on training data only. The regularization parameter C is selected from 0.01, 0.1, and 1.0 using validation balanced accuracy, and the test set is evaluated at a threshold of 0.5. The validation set also selected the neural-network checkpoint, so this is exploratory model development rather than an independent validation study.
 
 ## Dataset and splits
 
-Download the [Chest X-Ray Images (Pneumonia) dataset](https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia). The manifest uses 4,432 training, 784 validation, and 624 test images. The source partitioned the original train set and retained the original test set; original validation images are excluded. These splits differ from Phase 1's group-audited 618-image test set and the existing custom CNN report. Consequently, direct comparisons are not controlled. Exact duplicate checks do not prove patient-level independence; test data has previously been inspected. External validation is absent.
+Download the [Chest X-Ray Images (Pneumonia) dataset](https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia). The manifest uses 4,432 training, 784 validation, and 624 test images. The manifest partitions the original train set and retained the original test set; original validation images are excluded. These splits differ from Phase 1's group-audited 618-image test set and the existing custom CNN report. Consequently, direct comparisons are not controlled. Exact duplicate checks do not prove patient-level independence; test data has previously been inspected. External validation is absent.
 
 ## Setup and execution
 
@@ -28,15 +30,15 @@ python phase2/reference/scripts/hybrid_ablation.py
 
 The linked folder must contain `train`, `val`, and `test`, with `NORMAL` and `PNEUMONIA` subfolders. On Windows, copy the extracted dataset into `phase2/reference/data/raw/chest_xray` instead of using a symbolic link. No raw images are committed. Scripts fail if images or checkpoint are missing. The fusion experiment requires feature extraction from all 5,840 images and can be slow on CPU.
 
-To train a new model with the reference's split and defaults, use `python phase2/reference/scripts/train_cnn.py --checkpoint phase2/reference/results/models/new_run.pt`. This requires ImageNet weights to be available or downloaded. `--no-pretrained` changes the experiment. Training results must not be represented as identical to the supplied checkpoint without verification.
+To train a new model with the manifest split and default settings, use `python phase2/reference/scripts/train_cnn.py --checkpoint phase2/reference/results/models/new_run.pt`. This requires ImageNet weights to be available or downloaded. `--no-pretrained` changes the experiment. Training results must not be represented as identical to the supplied checkpoint without verification.
 
-## Original CNN evaluation
+## CNN evaluation
 
-The reference checkpoint was evaluated locally using the dataset above. Both the source record and local run have TN=185, FP=49, FN=13, TP=377; accuracy 90.06%, sensitivity 96.67%, specificity 79.06%, ROC-AUC 0.9551. See `results/metrics/local_test_metrics.json`. These are results of the reference author's model, reproduced locally, not evidence of a new training run. Probabilities are model scores, not clinical certainty.
+The supplied checkpoint was evaluated locally using the dataset above. The local run produced TN=185, FP=49, FN=13, TP=377; accuracy 90.06%, sensitivity 96.67%, specificity 79.06%, ROC-AUC 0.9551. See `results/metrics/local_test_metrics.json`. These results evaluate the supplied checkpoint and do not represent a new local training run. Probabilities are model scores, not clinical certainty.
 
 ## Relationship to the existing report
 
-`phase2/reports/Chest_Xray_Deep_Learning_Report.pdf` describes a different, five-block CNN and a 618-image test split. Its training scripts, trained weights and underlying per-image predictions were not present in the repository when this work began, so its results cannot be independently reproduced from this repository. Do not mix its scores with the reference ResNet18 scores or represent the two as a controlled comparison.
+`phase2/reports/Chest_Xray_Deep_Learning_Report.pdf` describes a different, five-block CNN and a 618-image test split. Its training scripts, trained weights and underlying per-image predictions were not present in the repository when this work began, so its results cannot be independently reproduced from this repository. Do not mix its scores with the ResNet18 scores or represent the two as a controlled comparison.
 
 ## Completed feature ablation
 
