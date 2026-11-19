@@ -8,6 +8,8 @@ An end-to-end Phase 1 classification project using interpretable image features 
 
 ## Deep learning and feature fusion
 
+The [deep-learning notebook](phase2/Phase2_DL_Pneumonia.ipynb) includes model training and analysis code. Its [execution status](phase2/NOTEBOOK_STATUS.md) explains the saved outputs and validation limitations.
+
 The [deep-learning and hybrid evaluation](phase2/deep_learning/README.md) uses a supplied ResNet18 checkpoint to classify X-rays and compares handcrafted, CNN, and combined features. It uses a different split from the earlier experiment; see its documentation before comparing results.
 
 ## Method
