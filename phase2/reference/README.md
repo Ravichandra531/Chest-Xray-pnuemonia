@@ -4,7 +4,7 @@ This educational prototype classifies pediatric chest X-rays as NORMAL or PNEUMO
 
 ## What was adapted
 
-The ResNet18 implementation, split manifest, training history, trained weights, and original metrics were copied from [Silence91169/pneumonia-screening-ml-dl](https://github.com/Silence91169/pneumonia-screening-ml-dl) commit `814aabe7a49b319c564f959881c313ee3c8e203f`. The source repository does not declare a license; attribution is given here, but permission for redistribution or reuse should be confirmed with the author. This is a reference model, not a model trained by this team. Its checkpoint SHA-256 is `e8dd23956afb6773226c68d15836407dd1d5b4cd0d2ba3a76f634ab00d0d766b`.
+The ResNet18 implementation, split manifest, training history, trained weights, and original metrics originate from [Silence91169/pneumonia-screening-ml-dl](https://github.com/Silence91169/pneumonia-screening-ml-dl), commit `814aabe7a49b319c564f959881c313ee3c8e203f`. The source repository does not declare a license; attribution is given here, but permission for redistribution or reuse should be confirmed with the author. This is a reference model, not a model trained by this team. Its checkpoint SHA-256 is `e8dd23956afb6773226c68d15836407dd1d5b4cd0d2ba3a76f634ab00d0d766b`.
 
 The added `hybrid_ablation.py` combines its 512-dimensional CNN embedding with 68 handcrafted descriptors (64 coarse intensity cells plus mean, standard deviation, and horizontal and vertical intensity differences). Class-balanced logistic regression compares handcrafted-only, CNN-only, and fused inputs. Standardization is fitted on training data only; C is selected from 0.01, 0.1, and 1.0 using validation balanced accuracy. The test set is evaluated at threshold 0.5. The reference model itself already used validation for checkpoint selection, so this is exploratory model development, not an independent validation study.
 
@@ -32,7 +32,7 @@ To train a new model with the reference's split and defaults, use `python phase2
 
 ## Original CNN evaluation
 
-The copied checkpoint was re-evaluated locally using the dataset above. Both the source record and local run have TN=185, FP=49, FN=13, TP=377; accuracy 90.06%, sensitivity 96.67%, specificity 79.06%, ROC-AUC 0.9551. See `results/metrics/local_test_metrics.json`. These are results of the reference author's model, reproduced locally, not evidence of a new training run. Probabilities are model scores, not clinical certainty.
+The reference checkpoint was evaluated locally using the dataset above. Both the source record and local run have TN=185, FP=49, FN=13, TP=377; accuracy 90.06%, sensitivity 96.67%, specificity 79.06%, ROC-AUC 0.9551. See `results/metrics/local_test_metrics.json`. These are results of the reference author's model, reproduced locally, not evidence of a new training run. Probabilities are model scores, not clinical certainty.
 
 ## Relationship to the existing report
 
