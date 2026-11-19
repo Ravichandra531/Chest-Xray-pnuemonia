@@ -1,4 +1,5 @@
 """CPU smoke tests for the transfer-learning pipeline."""
+
 from pathlib import Path
 
 import numpy as np
@@ -13,9 +14,9 @@ from src.models.deep_learning import ChestXrayClassifier
 def test_manifest_dataset_normalizes_pretrained_input(tmp_path: Path) -> None:
     image_path = tmp_path / "xray.png"
     Image.fromarray(np.full((32, 40), 127, dtype=np.uint8)).save(image_path)
-    frame = pd.DataFrame([
-        {"image_path": image_path.name, "label": "PNEUMONIA", "split": "train"}
-    ])
+    frame = pd.DataFrame(
+        [{"image_path": image_path.name, "label": "PNEUMONIA", "split": "train"}]
+    )
     dataset = ManifestXrayDataset(frame, "train", tmp_path, image_transform(False, 64))
     tensor, label, sample_id = dataset[0]
     assert tensor.shape == (3, 64, 64)

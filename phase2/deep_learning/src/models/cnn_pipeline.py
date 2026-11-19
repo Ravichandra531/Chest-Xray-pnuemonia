@@ -32,19 +32,33 @@ def seed_everything(seed: int = 42) -> None:
 
 
 def image_transform(training: bool, image_size: int = 224) -> Callable:
-    steps: list[Callable] = [transforms.Grayscale(num_output_channels=3), transforms.Resize((image_size, image_size))]
+    steps: list[Callable] = [
+        transforms.Grayscale(num_output_channels=3),
+        transforms.Resize((image_size, image_size)),
+    ]
     if training:
         steps.extend([transforms.RandomHorizontalFlip(), transforms.RandomRotation(5)])
-    steps.extend([transforms.ToTensor(), transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD)])
+    steps.extend(
+        [transforms.ToTensor(), transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD)]
+    )
     return transforms.Compose(steps)
 
 
 class ManifestXrayDataset(Dataset):
     """Manifest-backed dataset with strict path and label validation."""
 
-    def __init__(self, manifest: str | Path | pd.DataFrame, split: str, project_root: str | Path,
-                 transform: Callable | None = None):
-        frame = pd.read_csv(manifest) if not isinstance(manifest, pd.DataFrame) else manifest.copy()
+    def __init__(
+        self,
+        manifest: str | Path | pd.DataFrame,
+        split: str,
+        project_root: str | Path,
+        transform: Callable | None = None,
+    ):
+        frame = (
+            pd.read_csv(manifest)
+            if not isinstance(manifest, pd.DataFrame)
+            else manifest.copy()
+        )
         required = {"image_path", "label", "split"}
         if not required.issubset(frame.columns):
             raise ValueError(f"Manifest requires columns {sorted(required)}")
@@ -72,10 +86,18 @@ class ManifestXrayDataset(Dataset):
         return tensor, label, str(row.image_path)
 
 
-def make_loader(dataset: Dataset, batch_size: int, shuffle: bool, seed: int, num_workers: int = 0) -> DataLoader:
+def make_loader(
+    dataset: Dataset, batch_size: int, shuffle: bool, seed: int, num_workers: int = 0
+) -> DataLoader:
     generator = torch.Generator().manual_seed(seed)
-    return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=num_workers,
-                      generator=generator, pin_memory=torch.cuda.is_available())
+    return DataLoader(
+        dataset,
+        batch_size=batch_size,
+        shuffle=shuffle,
+        num_workers=num_workers,
+        generator=generator,
+        pin_memory=torch.cuda.is_available(),
+    )
 
 
 @dataclass
@@ -86,8 +108,13 @@ class EpochRecord:
     val_accuracy: float
 
 
-def _run_epoch(model: nn.Module, loader: DataLoader, criterion: nn.Module, device: torch.device,
-               optimizer: torch.optim.Optimizer | None = None) -> tuple[float, float]:
+def _run_epoch(
+    model: nn.Module,
+    loader: DataLoader,
+    criterion: nn.Module,
+    device: torch.device,
+    optimizer: torch.optim.Optimizer | None = None,
+) -> tuple[float, float]:
     model.train(optimizer is not None)
     total_loss = correct = count = 0
     for images, labels, _ in loader:
@@ -106,15 +133,28 @@ def _run_epoch(model: nn.Module, loader: DataLoader, criterion: nn.Module, devic
     return total_loss / count, correct / count
 
 
-def train_with_early_stopping(model: ChestXrayClassifier, train_loader: DataLoader, val_loader: DataLoader,
-                              device: torch.device, epochs: int, learning_rate: float,
-                              checkpoint_path: str | Path, patience: int = 3,
-                              pos_weight: float | None = None) -> list[EpochRecord]:
+def train_with_early_stopping(
+    model: ChestXrayClassifier,
+    train_loader: DataLoader,
+    val_loader: DataLoader,
+    device: torch.device,
+    epochs: int,
+    learning_rate: float,
+    checkpoint_path: str | Path,
+    patience: int = 3,
+    pos_weight: float | None = None,
+) -> list[EpochRecord]:
     model.to(device)
     criterion = nn.BCEWithLogitsLoss(
-        pos_weight=torch.tensor([pos_weight], device=device) if pos_weight is not None else None
+        pos_weight=(
+            torch.tensor([pos_weight], device=device)
+            if pos_weight is not None
+            else None
+        )
     )
-    optimizer = torch.optim.AdamW((p for p in model.parameters() if p.requires_grad), lr=learning_rate)
+    optimizer = torch.optim.AdamW(
+        (p for p in model.parameters() if p.requires_grad), lr=learning_rate
+    )
     best_loss, stale = float("inf"), 0
     history: list[EpochRecord] = []
     checkpoint_path = Path(checkpoint_path)
@@ -125,13 +165,24 @@ def train_with_early_stopping(model: ChestXrayClassifier, train_loader: DataLoad
         history.append(EpochRecord(epoch, train_loss, val_loss, val_accuracy))
         if val_loss < best_loss:
             best_loss, stale = val_loss, 0
-            torch.save({"state_dict": model.state_dict(), "backbone": model.backbone_name,
-                        "epoch": epoch, "val_loss": val_loss}, checkpoint_path)
+            torch.save(
+                {
+                    "state_dict": model.state_dict(),
+                    "backbone": model.backbone_name,
+                    "epoch": epoch,
+                    "val_loss": val_loss,
+                },
+                checkpoint_path,
+            )
         else:
             stale += 1
             if stale >= patience:
                 break
-    model.load_state_dict(torch.load(checkpoint_path, map_location=device, weights_only=True)["state_dict"])
+    model.load_state_dict(
+        torch.load(checkpoint_path, map_location=device, weights_only=True)[
+            "state_dict"
+        ]
+    )
     return history
 
 
@@ -164,8 +215,12 @@ def grad_cam(model: ChestXrayClassifier, input_tensor: torch.Tensor) -> np.ndarr
     activations: list[torch.Tensor] = []
     gradients: list[torch.Tensor] = []
     layer = model.get_target_layer_for_cam()
-    forward_handle = layer.register_forward_hook(lambda _m, _i, output: activations.append(output))
-    backward_handle = layer.register_full_backward_hook(lambda _m, _gi, go: gradients.append(go[0]))
+    forward_handle = layer.register_forward_hook(
+        lambda _m, _i, output: activations.append(output)
+    )
+    backward_handle = layer.register_full_backward_hook(
+        lambda _m, _gi, go: gradients.append(go[0])
+    )
     try:
         model.zero_grad(set_to_none=True)
         pneumonia_logit = model(input_tensor).squeeze()
@@ -174,7 +229,9 @@ def grad_cam(model: ChestXrayClassifier, input_tensor: torch.Tensor) -> np.ndarr
         pneumonia_logit.backward()
         weights = gradients[0].mean(dim=(2, 3), keepdim=True)
         cam = torch.relu((weights * activations[0]).sum(dim=1, keepdim=True))
-        cam = torch.nn.functional.interpolate(cam, input_tensor.shape[-2:], mode="bilinear", align_corners=False)
+        cam = torch.nn.functional.interpolate(
+            cam, input_tensor.shape[-2:], mode="bilinear", align_corners=False
+        )
         cam = cam[0, 0]
         cam = (cam - cam.min()) / (cam.max() - cam.min() + 1e-8)
         return cam.detach().cpu().numpy()

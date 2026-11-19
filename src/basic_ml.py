@@ -4,6 +4,7 @@ Supporting libraries: NumPy arrays, Pillow JPEG decoding, Matplotlib figures.
 Everything else uses Python's standard library. The standalone notebook embeds
 this implementation; this module supports the saved-artifact verification script.
 """
+
 import csv
 import hashlib
 import json
@@ -39,10 +40,15 @@ def patient_proxy(name):
 def find_root(path):
     path = Path(path).expanduser().resolve()
     for candidate in (path, path / "chest_xray", path / "chest_xray/chest_xray"):
-        if all((candidate / split / label).is_dir()
-               for split in ("train", "val", "test") for label in LABELS):
+        if all(
+            (candidate / split / label).is_dir()
+            for split in ("train", "val", "test")
+            for label in LABELS
+        ):
             return candidate
-    raise FileNotFoundError(f"Expected train/val/test, each with NORMAL/PNEUMONIA: {path}")
+    raise FileNotFoundError(
+        f"Expected train/val/test, each with NORMAL/PNEUMONIA: {path}"
+    )
 
 
 def audit_images(data_root):
@@ -52,29 +58,50 @@ def audit_images(data_root):
     for split in ("train", "val", "test"):
         for label, target in LABELS.items():
             for path in sorted((root / split / label).iterdir()):
-                if path.suffix.lower() not in (".jpeg", ".jpg", ".png") or path.name.startswith("._"):
+                if path.suffix.lower() not in (
+                    ".jpeg",
+                    ".jpg",
+                    ".png",
+                ) or path.name.startswith("._"):
                     continue
                 try:
                     with Image.open(path) as im:
                         im.load()
                         pixels = np.asarray(im.convert("L"))
-                        digest = hashlib.sha256(str(pixels.shape).encode() + pixels.tobytes()).hexdigest()
-                        records.append(dict(path=str(path.relative_to(root)), split=split,
-                            label=label, target=target, width=im.width, height=im.height,
-                            mode=im.mode, brightness=float(pixels.mean()),
-                            contrast=float(pixels.std()), dark_fraction=float((pixels <= 5).mean()),
-                            bright_fraction=float((pixels >= 250).mean()),
-                            pixel_hash=digest, patient_proxy=patient_proxy(path.name)))
+                        digest = hashlib.sha256(
+                            str(pixels.shape).encode() + pixels.tobytes()
+                        ).hexdigest()
+                        records.append(
+                            dict(
+                                path=str(path.relative_to(root)),
+                                split=split,
+                                label=label,
+                                target=target,
+                                width=im.width,
+                                height=im.height,
+                                mode=im.mode,
+                                brightness=float(pixels.mean()),
+                                contrast=float(pixels.std()),
+                                dark_fraction=float((pixels <= 5).mean()),
+                                bright_fraction=float((pixels >= 250).mean()),
+                                pixel_hash=digest,
+                                patient_proxy=patient_proxy(path.name),
+                            )
+                        )
                 except (OSError, ValueError) as exc:
-                    failures.append(dict(path=str(path.relative_to(root)), error=str(exc)))
+                    failures.append(
+                        dict(path=str(path.relative_to(root)), error=str(exc))
+                    )
     if not records:
         raise ValueError("No readable images")
     parent = list(range(len(records)))
+
     def find(i):
         while parent[i] != i:
             parent[i] = parent[parent[i]]
             i = parent[i]
         return i
+
     # Connected groups prevent a chain of duplicate/patient links crossing folds.
     for field in ("patient_proxy", "pixel_hash"):
         seen = {}
@@ -103,31 +130,49 @@ def audit_images(data_root):
             else:
                 seen_hashes.add(row["pixel_hash"])
         row["exclusion"] = reason
-        row["partition"] = "excluded" if reason else ("test" if row["split"] == "test" else "development")
+        row["partition"] = (
+            "excluded"
+            if reason
+            else ("test" if row["split"] == "test" else "development")
+        )
     return root, records, failures
 
 
 def make_features(path):
     """149 simple features: regional mean/std, histogram and global summaries."""
     with Image.open(path) as im:
-        image = ImageOps.pad(im.convert("L"), (64, 64), method=Image.Resampling.BILINEAR, color=0)
+        image = ImageOps.pad(
+            im.convert("L"), (64, 64), method=Image.Resampling.BILINEAR, color=0
+        )
         pixels = np.asarray(image, dtype=np.float64) / 255.0
     # 8x8 blocks; every block contains 8x8 normalized pixels.
     blocks = pixels.reshape(8, 8, 8, 8).transpose(0, 2, 1, 3)
     means = blocks.mean(axis=(2, 3)).ravel()
     stds = blocks.std(axis=(2, 3)).ravel()
     histogram = np.histogram(pixels, bins=16, range=(0, 1))[0] / pixels.size
-    summaries = [pixels.mean(), pixels.std(), np.median(pixels),
-                 np.abs(np.diff(pixels, axis=0)).mean(),
-                 np.abs(np.diff(pixels, axis=1)).mean()]
+    summaries = [
+        pixels.mean(),
+        pixels.std(),
+        np.median(pixels),
+        np.abs(np.diff(pixels, axis=0)).mean(),
+        np.abs(np.diff(pixels, axis=1)).mean(),
+    ]
     return np.concatenate([means, stds, histogram, summaries])
 
 
 def feature_names():
-    return ([f"block_mean_r{r}_c{c}" for r in range(8) for c in range(8)]
-            + [f"block_std_r{r}_c{c}" for r in range(8) for c in range(8)]
-            + [f"histogram_bin_{i}" for i in range(16)]
-            + ["global_mean", "global_std", "global_median", "vertical_difference", "horizontal_difference"])
+    return (
+        [f"block_mean_r{r}_c{c}" for r in range(8) for c in range(8)]
+        + [f"block_std_r{r}_c{c}" for r in range(8) for c in range(8)]
+        + [f"histogram_bin_{i}" for i in range(16)]
+        + [
+            "global_mean",
+            "global_std",
+            "global_median",
+            "vertical_difference",
+            "horizontal_difference",
+        ]
+    )
 
 
 def fit_scaler(x):
@@ -154,8 +199,9 @@ def grouped_folds(y, groups, n_folds=3, seed=SEED):
     assignment = np.full(len(y), -1, dtype=int)
     counts = np.zeros((n_folds, 2), dtype=int)
     for label in (0, 1):
-        items = [(g, ids) for g, ids in grouped.items()
-                 if int(y[ids].mean() >= 0.5) == label]
+        items = [
+            (g, ids) for g, ids in grouped.items() if int(y[ids].mean() >= 0.5) == label
+        ]
         rng.shuffle(items)
         items.sort(key=lambda item: len(item[1]), reverse=True)
         for group, ids in items:
@@ -177,8 +223,10 @@ def sigmoid(z):
 
 def logistic_objective(x, y, w, b, regularization, sample_weight):
     z = x @ w + b
-    return float(np.mean(sample_weight * (np.logaddexp(0.0, z) - y * z))
-                 + 0.5 * regularization * np.dot(w, w))
+    return float(
+        np.mean(sample_weight * (np.logaddexp(0.0, z) - y * z))
+        + 0.5 * regularization * np.dot(w, w)
+    )
 
 
 def train_logistic(x, y, regularization=0.01, max_iter=1000, learning_rate=0.2):
@@ -206,8 +254,14 @@ def train_logistic(x, y, regularization=0.01, max_iter=1000, learning_rate=0.2):
         history.append(loss)
         if abs(old_loss - loss) < 1e-8:
             break
-    return {"kind": "logistic", "w": w, "b": b, "lambda": regularization,
-            "loss_history": history, "iterations": len(history)}
+    return {
+        "kind": "logistic",
+        "w": w,
+        "b": b,
+        "lambda": regularization,
+        "loss_history": history,
+        "iterations": len(history),
+    }
 
 
 def train_naive_bayes(x, y, variance_floor=1e-3):
@@ -218,8 +272,12 @@ def train_naive_bayes(x, y, variance_floor=1e-3):
     """
     means = np.stack([x[y == label].mean(axis=0) for label in (0, 1)])
     variances = np.stack([x[y == label].var(axis=0) for label in (0, 1)])
-    return {"kind": "naive_bayes", "means": means,
-            "variances": np.maximum(variances, variance_floor), "prior": np.array([0.5, 0.5])}
+    return {
+        "kind": "naive_bayes",
+        "means": means,
+        "variances": np.maximum(variances, variance_floor),
+        "prior": np.array([0.5, 0.5]),
+    }
 
 
 def predict_score(model, x):
@@ -230,7 +288,9 @@ def predict_score(model, x):
     log_scores = []
     for label in (0, 1):
         var, mean = model["variances"][label], model["means"][label]
-        log_density = -0.5 * (np.log(2 * np.pi * var) + (x - mean) ** 2 / var).sum(axis=1)
+        log_density = -0.5 * (np.log(2 * np.pi * var) + (x - mean) ** 2 / var).sum(
+            axis=1
+        )
         log_scores.append(np.log(model["prior"][label]) + log_density)
     return sigmoid(log_scores[1] - log_scores[0])
 
@@ -264,10 +324,19 @@ def metrics(y, score, threshold=0.5):
     precision = tp / max(tp + fp, 1)
     fpr, tpr = roc_points(y, score)
     auc = float(np.sum((fpr[1:] - fpr[:-1]) * (tpr[1:] + tpr[:-1]) / 2))
-    return dict(accuracy=(tp + tn) / len(y), balanced_accuracy=(recall + specificity) / 2,
-                precision=precision, recall=recall, specificity=specificity,
-                f1=2 * precision * recall / max(precision + recall, 1e-12), roc_auc=auc,
-                tn=tn, fp=fp, fn=fn, tp=tp)
+    return dict(
+        accuracy=(tp + tn) / len(y),
+        balanced_accuracy=(recall + specificity) / 2,
+        precision=precision,
+        recall=recall,
+        specificity=specificity,
+        f1=2 * precision * recall / max(precision + recall, 1e-12),
+        roc_auc=auc,
+        tn=tn,
+        fp=fp,
+        fn=fn,
+        tp=tp,
+    )
 
 
 def grouped_bootstrap(y, score, groups, repeats=500):
@@ -281,9 +350,13 @@ def grouped_bootstrap(y, score, groups, repeats=500):
         ids = np.concatenate([indices[g] for g in sampled])
         if len(np.unique(y[ids])) == 2:
             values.append(metrics(y[ids], score[ids]))
-    return {key: [float(np.quantile([v[key] for v in values], 0.025)),
-                  float(np.quantile([v[key] for v in values], 0.975))]
-            for key in ("balanced_accuracy", "recall", "specificity", "f1", "roc_auc")}
+    return {
+        key: [
+            float(np.quantile([v[key] for v in values], 0.025)),
+            float(np.quantile([v[key] for v in values], 0.975)),
+        ]
+        for key in ("balanced_accuracy", "recall", "specificity", "f1", "roc_auc")
+    }
 
 
 def verify_math():
@@ -293,13 +366,13 @@ def verify_math():
     assert metrics(y, np.array([0.9, 0.8, 0.2, 0.1]))["roc_auc"] == 0.0
     assert metrics(y, np.ones(4))["roc_auc"] == 0.5
     assert metrics(y, np.ones(4))["balanced_accuracy"] == 0.5
-    toy = np.array([[1., 7.], [3., 7.], [5., 7.]])
+    toy = np.array([[1.0, 7.0], [3.0, 7.0], [5.0, 7.0]])
     scaler = fit_scaler(toy)
     z = scale(toy, scaler)
     assert np.allclose(z.mean(axis=0), 0)
     assert np.isclose(z[:, 0].std(), 1) and np.allclose(z[:, 1], 0)
     # Finite differences verify the weighted logistic gradient, including penalty.
-    xx = np.array([[-1., 2.], [0., 1.], [2., -1.]])
+    xx = np.array([[-1.0, 2.0], [0.0, 1.0], [2.0, -1.0]])
     yy = np.array([0, 1, 1])
     w, b, lam = np.array([0.2, -0.1]), 0.3, 0.1
     sw = len(yy) / (2 * np.bincount(yy)[yy])
@@ -308,10 +381,18 @@ def verify_math():
     theta, numerical, eps = np.r_[w, b], [], 1e-6
     for j in range(3):
         plus, minus = theta.copy(), theta.copy()
-        plus[j] += eps; minus[j] -= eps
-        numerical.append((logistic_objective(xx, yy, plus[:2], plus[2], lam, sw)
-                          - logistic_objective(xx, yy, minus[:2], minus[2], lam, sw)) / (2 * eps))
+        plus[j] += eps
+        minus[j] -= eps
+        numerical.append(
+            (
+                logistic_objective(xx, yy, plus[:2], plus[2], lam, sw)
+                - logistic_objective(xx, yy, minus[:2], minus[2], lam, sw)
+            )
+            / (2 * eps)
+        )
     assert np.allclose(analytic, numerical, atol=1e-7)
     trained = train_logistic(xx, yy, max_iter=50)
     assert np.all(np.diff(trained["loss_history"]) <= 1e-12)
-    print("PASS: constant-feature scaling, tied/perfect/reversed ROC-AUC, majority baseline, finite-difference logistic gradient, monotone optimization loss.")
+    print(
+        "PASS: constant-feature scaling, tied/perfect/reversed ROC-AUC, majority baseline, finite-difference logistic gradient, monotone optimization loss."
+    )
