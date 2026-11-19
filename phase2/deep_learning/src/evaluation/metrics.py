@@ -23,9 +23,7 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 
-DISCLAIMER = (
-    "Educational research prototype — NOT intended for clinical diagnosis or medical decision-making."
-)
+DISCLAIMER = "Educational research prototype — NOT intended for clinical diagnosis or medical decision-making."
 
 
 @dataclass(frozen=True)
@@ -170,7 +168,9 @@ def compute_clinical_metrics(
         elif y_prob_arr.ndim == 1:
             prob_pos = y_prob_arr.astype(float)
         else:
-            raise ValueError(f"y_prob must be 1-D or 2-D array; got shape {y_prob_arr.shape}")
+            raise ValueError(
+                f"y_prob must be 1-D or 2-D array; got shape {y_prob_arr.shape}"
+            )
 
         if prob_pos.size != y_true_arr.size:
             raise ValueError(
@@ -186,7 +186,9 @@ def compute_clinical_metrics(
                 roc_auc = None
 
         try:
-            brier_score = float(brier_score_loss(y_true_arr, prob_pos, pos_label=pos_label))
+            brier_score = float(
+                brier_score_loss(y_true_arr, prob_pos, pos_label=pos_label)
+            )
         except Exception:
             brier_score = None
 
@@ -256,6 +258,7 @@ def calibrate_classifier(
     # Support both scikit-learn >= 1.6/1.8 (FrozenEstimator) and legacy (<1.6 cv="prefit")
     try:
         from sklearn.frozen import FrozenEstimator
+
         calibrated = CalibratedClassifierCV(
             estimator=FrozenEstimator(estimator),
             method=method,

@@ -21,16 +21,16 @@ From the repository root, using Python 3.12:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -r phase2/reference/requirements.txt
-mkdir -p phase2/reference/data/raw
-ln -s /absolute/path/to/chest_xray phase2/reference/data/raw/chest_xray
-python phase2/reference/scripts/evaluate_cnn.py --output phase2/reference/results/metrics/reproduced_test_metrics.json
-python phase2/reference/scripts/hybrid_ablation.py
+pip install -r phase2/deep_learning/requirements.txt
+mkdir -p phase2/deep_learning/data/raw
+ln -s /absolute/path/to/chest_xray phase2/deep_learning/data/raw/chest_xray
+python phase2/deep_learning/scripts/evaluate_cnn.py --output phase2/deep_learning/results/metrics/reproduced_test_metrics.json
+python phase2/deep_learning/scripts/hybrid_ablation.py
 ```
 
-The linked folder must contain `train`, `val`, and `test`, with `NORMAL` and `PNEUMONIA` subfolders. On Windows, copy the extracted dataset into `phase2/reference/data/raw/chest_xray` instead of using a symbolic link. No raw images are committed. Scripts fail if images or checkpoint are missing. The fusion experiment requires feature extraction from all 5,840 images and can be slow on CPU.
+The linked folder must contain `train`, `val`, and `test`, with `NORMAL` and `PNEUMONIA` subfolders. On Windows, copy the extracted dataset into `phase2/deep_learning/data/raw/chest_xray` instead of using a symbolic link. No raw images are committed. Scripts fail if images or checkpoint are missing. The fusion experiment requires feature extraction from all 5,840 images and can be slow on CPU.
 
-To train a new model with the manifest split and default settings, use `python phase2/reference/scripts/train_cnn.py --checkpoint phase2/reference/results/models/new_run.pt`. This requires ImageNet weights to be available or downloaded. `--no-pretrained` changes the experiment. Training results must not be represented as identical to the supplied checkpoint without verification.
+To train a new model with the manifest split and default settings, use `python phase2/deep_learning/scripts/train_cnn.py --checkpoint phase2/deep_learning/results/models/new_run.pt`. This requires ImageNet weights to be available or downloaded. `--no-pretrained` changes the experiment. Training results must not be represented as identical to the supplied checkpoint without verification.
 
 ## CNN evaluation
 

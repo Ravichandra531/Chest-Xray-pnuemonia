@@ -8,7 +8,7 @@ An end-to-end Phase 1 classification project using interpretable image features 
 
 ## Deep learning and feature fusion
 
-The [deep-learning and hybrid evaluation](phase2/reference/README.md) uses a supplied ResNet18 checkpoint to classify X-rays and compares handcrafted, CNN, and combined features. It uses a different split from the earlier experiment; see its documentation before comparing results.
+The [deep-learning and hybrid evaluation](phase2/deep_learning/README.md) uses a supplied ResNet18 checkpoint to classify X-rays and compares handcrafted, CNN, and combined features. It uses a different split from the earlier experiment; see its documentation before comparing results.
 
 ## Method
 

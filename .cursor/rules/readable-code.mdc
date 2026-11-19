@@ -1,0 +1,8 @@
+---
+description: Readable code formatting
+alwaysApply: true
+---
+
+# Readable code
+
+Write readable, consistently spaced code. Put one statement per line and use blank lines to separate logical steps. Avoid compressed imports, chained statements, and unnecessary semicolons.
