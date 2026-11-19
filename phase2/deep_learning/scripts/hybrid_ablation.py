@@ -64,6 +64,6 @@ def main():
         predictions[name + '_probability'] = prob
         print(name, json.dumps(results[name]), flush=True)
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps({'description':'Exploratory reference-checkpoint feature ablation', 'threshold':0.5, 'models':results}, indent=2)+'\n')
+    args.output.write_text(json.dumps({'description':'Exploratory pretrained-checkpoint feature ablation', 'threshold':0.5, 'models':results}, indent=2)+'\n')
     predictions.to_csv(args.output.with_name('hybrid_predictions.csv'), index=False)
 if __name__ == '__main__': main()

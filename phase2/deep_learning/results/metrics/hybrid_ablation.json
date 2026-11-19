@@ -1,5 +1,5 @@
 {
-  "description": "Exploratory reference-checkpoint feature ablation",
+  "description": "Exploratory pretrained-checkpoint feature ablation",
   "threshold": 0.5,
   "models": {
     "handcrafted": {
